@@ -3,322 +3,314 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>חפש את החמץ - גרסה משודרגת</title>
+    <title>איפה החמץ? - המשחק המלא</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap');
 
+        :root {
+            --wood: #5d4037;
+            --wood-dark: #3d2b1f;
+        }
+
         body {
             font-family: 'Assistant', sans-serif;
             overflow: hidden;
-            background: radial-gradient(circle, #334155 0%, #0f172a 100%);
+            background: #0f172a;
             color: #fff;
+            margin: 0;
+            touch-action: manipulation;
         }
 
         #game-container {
-            position: relative;
             width: 100vw;
             height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
 
         .room-frame {
             position: relative;
-            width: 90%;
-            max-width: 950px;
-            height: 65vh;
-            border: 12px solid #3d2b1f;
-            border-radius: 20px;
+            width: 95%;
+            max-width: 800px;
+            height: 60vh;
+            border: 10px solid var(--wood-dark);
+            border-radius: 24px;
             background-color: #fff;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             overflow: hidden;
-            transition: transform 0.3s ease;
         }
 
-        /* רקעים עם טקסטורה */
+        /* עיצובי חדרים */
         .bg-kitchen {
-            background: #f1f5f9;
-            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%, #e2e8f0),
-                              linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%, #e2e8f0);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
+            background: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+            background-size: 30px 30px;
         }
         .bg-bedroom {
-            background: #fffafb;
-            background-image: radial-gradient(#ffe4e6 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: #fffafa;
+            background-image: linear-gradient(0deg, #f1f5f9 2px, transparent 2px);
+            background-size: 100% 40px;
         }
 
-        /* רהיטים עם עומק */
+        /* רהיטים */
         .furniture {
             position: absolute;
-            background-color: #795548;
-            border: 1px solid #3d2b1f;
-            border-bottom: 5px solid #3d2b1f;
-            border-right: 5px solid #3d2b1f;
-            border-radius: 8px;
-            z-index: 5;
+            background-color: #8d6e63;
+            border: 2px solid var(--wood-dark);
+            border-radius: 12px;
+            z-index: 10;
             display: grid;
-            padding: 8px;
-            gap: 4px;
-            box-shadow: 10px 10px 20px rgba(0,0,0,0.1);
+            padding: 10px;
+            gap: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
         }
 
         .furniture-label {
             position: absolute;
-            top: -22px;
+            top: -24px;
             right: 0;
-            background: #3d2b1f;
-            color: #d7ccc8;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px 4px 0 0;
-            font-weight: bold;
+            background: var(--wood-dark);
+            color: #fef3c7;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 6px 6px 0 0;
+            font-weight: 800;
         }
 
-        /* רשת פריטים פנימית למניעת הסתרה */
         .grid-cell {
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            width: 100%;
+            height: 100%;
         }
 
         .item {
+            font-size: clamp(24px, 5vw, 40px);
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             user-select: none;
-            z-index: 20;
-            font-size: 32px;
-            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
         .item:hover {
-            transform: scale(1.3) rotate(10deg);
-            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
-            z-index: 100;
+            transform: scale(1.3) rotate(8deg);
+            z-index: 50;
         }
 
-        /* אפקטים מיוחדים לרהיטים */
-        .sink-fixture {
-            position: absolute;
-            top: -20px;
-            left: 20%;
-            width: 10px;
-            height: 25px;
-            background: #94a3b8;
-            border-radius: 5px 5px 0 0;
-        }
-       
-        .bed-pillows {
-            position: absolute;
-            top: 10px;
-            width: 80%;
-            height: 25%;
-            display: flex;
-            justify-content: space-around;
-        }
-        .pillow { background: #fff; width: 40%; height: 100%; border-radius: 10px; border: 1px solid #e2e8f0; }
+        /* כיור ומצעים */
+        .sink { position: absolute; top: -15px; left: 15%; width: 12px; height: 20px; background: #94a3b8; border-radius: 4px 4px 0 0; }
+        .pillow { position: absolute; top: 10px; width: 35%; height: 20%; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
 
-        .victory-overlay {
+        .overlay {
             display: none;
             position: absolute;
             inset: 0;
-            background: rgba(15, 23, 42, 0.9);
-            z-index: 1000;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 200;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            padding: 20px;
         }
 
-        .confetti { position: absolute; z-index: 1100; }
+        .btn-main {
+            background: #f59e0b;
+            color: #0f172a;
+            font-weight: 900;
+            padding: 1.25rem 3rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+            transition: all 0.2s;
+        }
+
+        .btn-main:hover { transform: translateY(-3px); background: #fbbf24; }
+
+        .share-text {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="ui-panel" class="mb-6 text-center">
-        <h1 class="text-5xl font-extrabold text-amber-500 mb-3 tracking-tight">חיפוש חמץ</h1>
-        <div class="bg-white/5 border border-white/10 px-10 py-4 rounded-3xl inline-flex flex-col items-center shadow-2xl backdrop-blur-md">
-            <span class="text-gray-400 text-sm mb-1 uppercase tracking-widest">המשימה שלך ב<span id="room-name">...</span></span>
-            <span class="text-3xl font-bold">למצוא את ה<span id="target-name" class="text-yellow-400">...</span></span>
+    <!-- UI Header -->
+    <div class="mb-6 text-center px-4">
+        <h1 class="text-3xl md:text-5xl font-black text-amber-500 mb-2 drop-shadow-lg">בדיקת חמץ 🔍</h1>
+        <div class="bg-white/10 border border-white/20 py-3 px-6 rounded-2xl backdrop-blur-sm inline-block shadow-xl">
+            <p class="text-lg md:text-2xl font-bold">
+                חפשי ב<span id="room-display" class="text-blue-300">...</span> את ה<span id="target-display" class="text-yellow-400 underline">...</span>
+            </p>
         </div>
     </div>
 
-    <div class="room-frame shadow-inner" id="room">
-        <!-- התוכן נוצר דינמית -->
-    </div>
+    <!-- The Room -->
+    <div class="room-frame" id="room-canvas"></div>
 
-    <div id="victory-overlay" class="victory-overlay">
-        <div class="text-9xl mb-6 animate-bounce">✨</div>
-        <h2 class="text-6xl font-black text-yellow-400 mb-4">כל הכבוד!</h2>
-        <p class="text-2xl text-blue-100/70 mb-10">מצאת את החמץ המסתתר!</p>
-        <button onclick="loadLevel()" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-6 px-20 rounded-2xl text-3xl shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all hover:-translate-y-2 active:translate-y-0">
-            לחדר הבא ➔
-        </button>
+    <!-- Victory Screen -->
+    <div id="victory-overlay" class="overlay">
+        <div class="text-8xl mb-4">🏆</div>
+        <h2 class="text-5xl font-black text-yellow-400 mb-2">מצאת אותו!</h2>
+        <p class="text-xl text-slate-300 mb-8">החדר כשר למהדרין.</p>
+        <button onclick="nextLevel()" class="btn-main">לחדר הבא ➔</button>
+        <div class="share-text" onclick="copyGameLink()">העתק קישור למשחק ושילחי לחברות</div>
     </div>
 </div>
 
 <script>
-    const roomContainer = document.getElementById('room');
-    const targetDisplay = document.getElementById('target-name');
-    const roomNameDisplay = document.getElementById('room-name');
-    const victoryOverlay = document.getElementById('victory-overlay');
+    const roomCanvas = document.getElementById('room-canvas');
+    const roomTitle = document.getElementById('room-display');
+    const targetTitle = document.getElementById('target-display');
+    const victoryUI = document.getElementById('victory-overlay');
 
-    let currentRoomIndex = 0;
+    let currentLevel = 0;
 
-    const gameRooms = [
+    const rooms = [
         {
             name: 'מטבח',
-            bgClass: 'bg-kitchen',
+            style: 'bg-kitchen',
             furniture: [
-                { id: 'fridge', label: 'מקרר', top: '5%', left: '5%', w: '140px', h: '380px', color: '#f8fafc', cols: 2, rows: 5, items: ['🥦', '🥛', '🍎', '🥚', '🧀'] },
-                { id: 'counter', label: 'שיש וכיור', bottom: '0', left: '25%', w: '450px', h: '140px', color: '#cbd5e1', cols: 5, rows: 2, items: ['☕', '🥣', '🍽️', '🍶', '🧼'], hasSink: true },
-                { id: 'cabinet', label: 'ארון עליון', top: '8%', right: '8%', w: '220px', h: '180px', color: '#a1887f', cols: 3, rows: 2, items: ['🍷', '🥃', '🍵'] }
+                { id: 'fridge', label: 'מקרר', top: '5%', left: '5%', w: '130px', h: '350px', color: '#f1f5f9', grid: [2, 4], items: ['🥦', '🥛', '🍎', '🥚'] },
+                { id: 'counter', label: 'שיש', bottom: '0', left: '25%', w: '400px', h: '120px', color: '#cbd5e1', grid: [4, 1], items: ['☕', '🥣', '🍽️'], hasSink: true },
+                { id: 'cabinet', label: 'ארון', top: '10%', right: '10%', w: '180px', h: '150px', color: '#a1887f', grid: [2, 1], items: ['🍷', '🍵'] }
             ]
         },
         {
             name: 'חדר שינה',
-            bgClass: 'bg-bedroom',
+            style: 'bg-bedroom',
             furniture: [
-                { id: 'closet', label: 'ארון בגדים', top: '5%', left: '5%', w: '220px', h: '400px', color: '#5d4037', cols: 2, rows: 4, items: ['🧥', '👕', '👖', '👗'] },
-                { id: 'bed', label: 'מיטה מסודרת', bottom: '60px', left: '35%', w: '380px', h: '220px', color: '#8d6e63', cols: 3, rows: 2, items: ['🧸', '📖', '📱'], hasBedding: true },
-                { id: 'desk', label: 'פינת עבודה', bottom: '60px', right: '5%', w: '180px', h: '160px', color: '#d7ccc8', cols: 2, rows: 2, items: ['💻', '🖋️'] }
+                { id: 'closet', label: 'ארון בגדים', top: '5%', right: '5%', w: '180px', h: '380px', color: '#5d4037', grid: [1, 4], items: ['🧥', '👕', '👖', '👗'] },
+                { id: 'bed', label: 'מיטה', bottom: '50px', left: '10%', w: '350px', h: '200px', color: '#8d6e63', grid: [2, 1], items: ['🧸', '📖'], hasPillows: true },
+                { id: 'desk', label: 'שולחן', bottom: '50px', right: '30%', w: '150px', h: '120px', color: '#d7ccc8', grid: [1, 1], items: ['💻'] }
             ]
         }
     ];
 
-    const hametzTypes = [
+    const hametzList = [
         { name: 'לחם', emoji: '🍞' },
         { name: 'בייגלה', emoji: '🥨' },
-        { name: 'סופגנייה', emoji: '🍩' },
         { name: 'קוראסון', emoji: '🥐' },
-        { name: 'בורקס', emoji: '🥟' }
+        { name: 'בורקס', emoji: '🥟' },
+        { name: 'בגט', emoji: '🥖' }
     ];
 
-    function loadLevel() {
-        victoryOverlay.style.display = 'none';
-        roomContainer.innerHTML = '';
+    function nextLevel() {
+        victoryUI.style.display = 'none';
+        roomCanvas.innerHTML = '';
        
-        const roomInfo = gameRooms[currentRoomIndex % gameRooms.length];
-        currentRoomIndex++;
+        const room = rooms[currentLevel % rooms.length];
+        currentLevel++;
 
-        roomContainer.className = 'room-frame ' + roomInfo.bgClass;
-        roomNameDisplay.textContent = roomInfo.name;
+        roomCanvas.className = 'room-frame ' + room.style;
+        roomTitle.textContent = room.name;
 
-        // הגרלת חמץ
-        const target = hametzTypes[Math.floor(Math.random() * hametzTypes.length)];
-        targetDisplay.textContent = target.name;
+        const target = hametzList[Math.floor(Math.random() * hametzList.length)];
+        targetTitle.textContent = target.name;
 
-        // יצירת רהיטים
-        roomInfo.furniture.forEach(f => {
-            const furn = document.createElement('div');
-            furn.className = 'furniture';
-            furn.style.cssText = `
+        // בניית הרהיטים
+        room.furniture.forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'furniture';
+            div.style.cssText = `
                 top: ${f.top || 'auto'}; bottom: ${f.bottom || 'auto'};
                 left: ${f.left || 'auto'}; right: ${f.right || 'auto'};
                 width: ${f.w}; height: ${f.h};
                 background-color: ${f.color};
-                grid-template-columns: repeat(${f.cols}, 1fr);
-                grid-template-rows: repeat(${f.rows}, 1fr);
+                grid-template-columns: repeat(${f.grid[0]}, 1fr);
+                grid-template-rows: repeat(${f.grid[1]}, 1fr);
             `;
 
-            // תגיות ותוספות
-            furn.innerHTML = `<div class="furniture-label">${f.label}</div>`;
-            if (f.hasSink) {
-                const sink = document.createElement('div');
-                sink.className = 'sink-fixture';
-                furn.appendChild(sink);
-            }
-            if (f.hasBedding) {
-                const pillows = document.createElement('div');
-                pillows.className = 'bed-pillows';
-                pillows.innerHTML = '<div class="pillow"></div><div class="pillow"></div>';
-                furn.appendChild(pillows);
+            div.innerHTML = `<div class="furniture-label">${f.label}</div>`;
+           
+            if (f.hasSink) div.innerHTML += '<div class="sink"></div>';
+            if (f.hasPillows) {
+                div.innerHTML += '<div class="pillow" style="left:10%"></div>';
+                div.innerHTML += '<div class="pillow" style="right:10%"></div>';
             }
 
-            // יצירת תאים ברשת
-            const totalCells = f.cols * f.rows;
-            const cells = [];
+            const totalCells = f.grid[0] * f.grid[1];
+            const cellElements = [];
+
             for (let i = 0; i < totalCells; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
-                furn.appendChild(cell);
-                cells.push(cell);
+                div.appendChild(cell);
+                cellElements.push(cell);
             }
 
-            // פיזור פריטים בתוך התאים (בלי כפילויות בתא)
-            const shuffledItems = [...f.items].sort(() => 0.5 - Math.random());
-            shuffledItems.forEach((emoji, idx) => {
-                if (idx < cells.length) {
-                    createItem(emoji, cells[idx], false);
+            // פיזור חפצים רגילים
+            f.items.forEach((emoji, idx) => {
+                if (cellElements[idx]) {
+                    const span = document.createElement('span');
+                    span.className = 'item';
+                    span.textContent = emoji;
+                    cellElements[idx].appendChild(span);
                 }
             });
 
-            furn.dataset.id = f.id;
-            roomContainer.appendChild(furn);
+            div.dataset.id = f.id;
+            roomCanvas.appendChild(div);
         });
 
-        // החבאת החמץ בתא פנוי אקראי באחד הרהיטים
-        const allFurniture = roomContainer.querySelectorAll('.furniture');
-        const randomFurn = allFurniture[Math.floor(Math.random() * allFurniture.length)];
-        const emptyCells = Array.from(randomFurn.querySelectorAll('.grid-cell')).filter(c => c.children.length === 0);
-       
-        const targetCell = emptyCells.length > 0 ? emptyCells[0] : randomFurn.querySelectorAll('.grid-cell')[0];
-        createItem(target.emoji, targetCell, true);
+        // החבאת החמץ
+        const allFurns = roomCanvas.querySelectorAll('.furniture');
+        const randomFurn = allFurns[Math.floor(Math.random() * allFurns.length)];
+        const cells = Array.from(randomFurn.querySelectorAll('.grid-cell'));
+        const emptyCell = cells.find(c => c.children.length === 0) || cells[0];
+
+        const targetSpan = document.createElement('span');
+        targetSpan.className = 'item';
+        targetSpan.textContent = target.emoji;
+        targetSpan.style.filter = 'brightness(0.95)'; // הסתרה קלה
+        targetSpan.onclick = (e) => {
+            e.stopPropagation();
+            victory();
+        };
+        emptyCell.appendChild(targetSpan);
     }
 
-    function createItem(emoji, parent, isTarget) {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.textContent = emoji;
-       
-        if (isTarget) {
-            item.onclick = (e) => { e.stopPropagation(); win(); };
-            item.style.fontSize = '26px';
-            item.style.opacity = '0.95';
-        } else {
-            item.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
-        }
-
-        parent.appendChild(item);
-    }
-
-    function win() {
-        victoryOverlay.style.display = 'flex';
-        spawnConfetti();
-    }
-
-    function spawnConfetti() {
-        const colors = ['#fbbf24', '#3b82f6', '#ef4444', '#10b981', '#ffffff'];
-        for (let i = 0; i < 120; i++) {
+    function victory() {
+        victoryUI.style.display = 'flex';
+        // קונפטי
+        for (let i = 0; i < 50; i++) {
             const c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.cssText = `
-                width: ${Math.random() * 10 + 5}px;
-                height: ${Math.random() * 10 + 5}px;
-                background-color: ${colors[Math.floor(Math.random() * colors.length)]};
-                left: ${Math.random() * 100}vw;
-                top: -20px;
-                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-            `;
+            c.style.position = 'absolute';
+            c.style.width = '10px';
+            c.style.height = '10px';
+            c.style.background = ['#fbbf24', '#3b82f6', '#f472b6'][Math.floor(Math.random()*3)];
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-10px';
+            c.style.zIndex = '1000';
             document.body.appendChild(c);
-
             c.animate([
                 { transform: 'translateY(0) rotate(0)', opacity: 1 },
-                { transform: `translateY(110vh) translateX(${(Math.random()-0.5)*300}px) rotate(${Math.random()*1000}deg)`, opacity: 0 }
-            ], {
-                duration: 2000 + Math.random() * 2500,
-                easing: 'cubic-bezier(.25,.1,.25,1)'
-            }).onfinish = () => c.remove();
+                { transform: `translateY(100vh) rotate(${Math.random()*360}deg)`, opacity: 0 }
+            ], { duration: 2000 + Math.random()*2000 }).onfinish = () => c.remove();
         }
     }
 
-    window.onload = loadLevel;
+    function copyGameLink() {
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = "בואי למצוא את החמץ! משחק חגיגי לפסח 🥨";
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert("הטקסט הועתק! עכשיו אפשר להדביק בוואטסאפ");
+    }
+
+    window.onload = nextLevel;
 </script>
 
 </body>
