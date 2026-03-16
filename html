@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חפש את החמץ - גרסה משודרגת</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap');
+
+        body {
+            font-family: 'Assistant', sans-serif;
+            overflow: hidden;
+            background: radial-gradient(circle, #334155 0%, #0f172a 100%);
+            color: #fff;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .room-frame {
+            position: relative;
+            width: 90%;
+            max-width: 950px;
+            height: 65vh;
+            border: 12px solid #3d2b1f;
+            border-radius: 20px;
+            background-color: #fff;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        /* רקעים עם טקסטורה */
+        .bg-kitchen {
+            background: #f1f5f9;
+            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%, #e2e8f0),
+                              linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%, #e2e8f0);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+        .bg-bedroom {
+            background: #fffafb;
+            background-image: radial-gradient(#ffe4e6 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* רהיטים עם עומק */
+        .furniture {
+            position: absolute;
+            background-color: #795548;
+            border: 1px solid #3d2b1f;
+            border-bottom: 5px solid #3d2b1f;
+            border-right: 5px solid #3d2b1f;
+            border-radius: 8px;
+            z-index: 5;
+            display: grid;
+            padding: 8px;
+            gap: 4px;
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .furniture-label {
+            position: absolute;
+            top: -22px;
+            right: 0;
+            background: #3d2b1f;
+            color: #d7ccc8;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px 4px 0 0;
+            font-weight: bold;
+        }
+
+        /* רשת פריטים פנימית למניעת הסתרה */
+        .grid-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .item {
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            z-index: 20;
+            font-size: 32px;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+        }
+
+        .item:hover {
+            transform: scale(1.3) rotate(10deg);
+            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+            z-index: 100;
+        }
+
+        /* אפקטים מיוחדים לרהיטים */
+        .sink-fixture {
+            position: absolute;
+            top: -20px;
+            left: 20%;
+            width: 10px;
+            height: 25px;
+            background: #94a3b8;
+            border-radius: 5px 5px 0 0;
+        }
+       
+        .bed-pillows {
+            position: absolute;
+            top: 10px;
+            width: 80%;
+            height: 25%;
+            display: flex;
+            justify-content: space-around;
+        }
+        .pillow { background: #fff; width: 40%; height: 100%; border-radius: 10px; border: 1px solid #e2e8f0; }
+
+        .victory-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .confetti { position: absolute; z-index: 1100; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-panel" class="mb-6 text-center">
+        <h1 class="text-5xl font-extrabold text-amber-500 mb-3 tracking-tight">חיפוש חמץ</h1>
+        <div class="bg-white/5 border border-white/10 px-10 py-4 rounded-3xl inline-flex flex-col items-center shadow-2xl backdrop-blur-md">
+            <span class="text-gray-400 text-sm mb-1 uppercase tracking-widest">המשימה שלך ב<span id="room-name">...</span></span>
+            <span class="text-3xl font-bold">למצוא את ה<span id="target-name" class="text-yellow-400">...</span></span>
+        </div>
+    </div>
+
+    <div class="room-frame shadow-inner" id="room">
+        <!-- התוכן נוצר דינמית -->
+    </div>
+
+    <div id="victory-overlay" class="victory-overlay">
+        <div class="text-9xl mb-6 animate-bounce">✨</div>
+        <h2 class="text-6xl font-black text-yellow-400 mb-4">כל הכבוד!</h2>
+        <p class="text-2xl text-blue-100/70 mb-10">מצאת את החמץ המסתתר!</p>
+        <button onclick="loadLevel()" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-6 px-20 rounded-2xl text-3xl shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all hover:-translate-y-2 active:translate-y-0">
+            לחדר הבא ➔
+        </button>
+    </div>
+</div>
+
+<script>
+    const roomContainer = document.getElementById('room');
+    const targetDisplay = document.getElementById('target-name');
+    const roomNameDisplay = document.getElementById('room-name');
+    const victoryOverlay = document.getElementById('victory-overlay');
+
+    let currentRoomIndex = 0;
+
+    const gameRooms = [
+        {
+            name: 'מטבח',
+            bgClass: 'bg-kitchen',
+            furniture: [
+                { id: 'fridge', label: 'מקרר', top: '5%', left: '5%', w: '140px', h: '380px', color: '#f8fafc', cols: 2, rows: 5, items: ['🥦', '🥛', '🍎', '🥚', '🧀'] },
+                { id: 'counter', label: 'שיש וכיור', bottom: '0', left: '25%', w: '450px', h: '140px', color: '#cbd5e1', cols: 5, rows: 2, items: ['☕', '🥣', '🍽️', '🍶', '🧼'], hasSink: true },
+                { id: 'cabinet', label: 'ארון עליון', top: '8%', right: '8%', w: '220px', h: '180px', color: '#a1887f', cols: 3, rows: 2, items: ['🍷', '🥃', '🍵'] }
+            ]
+        },
+        {
+            name: 'חדר שינה',
+            bgClass: 'bg-bedroom',
+            furniture: [
+                { id: 'closet', label: 'ארון בגדים', top: '5%', left: '5%', w: '220px', h: '400px', color: '#5d4037', cols: 2, rows: 4, items: ['🧥', '👕', '👖', '👗'] },
+                { id: 'bed', label: 'מיטה מסודרת', bottom: '60px', left: '35%', w: '380px', h: '220px', color: '#8d6e63', cols: 3, rows: 2, items: ['🧸', '📖', '📱'], hasBedding: true },
+                { id: 'desk', label: 'פינת עבודה', bottom: '60px', right: '5%', w: '180px', h: '160px', color: '#d7ccc8', cols: 2, rows: 2, items: ['💻', '🖋️'] }
+            ]
+        }
+    ];
+
+    const hametzTypes = [
+        { name: 'לחם', emoji: '🍞' },
+        { name: 'בייגלה', emoji: '🥨' },
+        { name: 'סופגנייה', emoji: '🍩' },
+        { name: 'קוראסון', emoji: '🥐' },
+        { name: 'בורקס', emoji: '🥟' }
+    ];
+
+    function loadLevel() {
+        victoryOverlay.style.display = 'none';
+        roomContainer.innerHTML = '';
+       
+        const roomInfo = gameRooms[currentRoomIndex % gameRooms.length];
+        currentRoomIndex++;
+
+        roomContainer.className = 'room-frame ' + roomInfo.bgClass;
+        roomNameDisplay.textContent = roomInfo.name;
+
+        // הגרלת חמץ
+        const target = hametzTypes[Math.floor(Math.random() * hametzTypes.length)];
+        targetDisplay.textContent = target.name;
+
+        // יצירת רהיטים
+        roomInfo.furniture.forEach(f => {
+            const furn = document.createElement('div');
+            furn.className = 'furniture';
+            furn.style.cssText = `
+                top: ${f.top || 'auto'}; bottom: ${f.bottom || 'auto'};
+                left: ${f.left || 'auto'}; right: ${f.right || 'auto'};
+                width: ${f.w}; height: ${f.h};
+                background-color: ${f.color};
+                grid-template-columns: repeat(${f.cols}, 1fr);
+                grid-template-rows: repeat(${f.rows}, 1fr);
+            `;
+
+            // תגיות ותוספות
+            furn.innerHTML = `<div class="furniture-label">${f.label}</div>`;
+            if (f.hasSink) {
+                const sink = document.createElement('div');
+                sink.className = 'sink-fixture';
+                furn.appendChild(sink);
+            }
+            if (f.hasBedding) {
+                const pillows = document.createElement('div');
+                pillows.className = 'bed-pillows';
+                pillows.innerHTML = '<div class="pillow"></div><div class="pillow"></div>';
+                furn.appendChild(pillows);
+            }
+
+            // יצירת תאים ברשת
+            const totalCells = f.cols * f.rows;
+            const cells = [];
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                furn.appendChild(cell);
+                cells.push(cell);
+            }
+
+            // פיזור פריטים בתוך התאים (בלי כפילויות בתא)
+            const shuffledItems = [...f.items].sort(() => 0.5 - Math.random());
+            shuffledItems.forEach((emoji, idx) => {
+                if (idx < cells.length) {
+                    createItem(emoji, cells[idx], false);
+                }
+            });
+
+            furn.dataset.id = f.id;
+            roomContainer.appendChild(furn);
+        });
+
+        // החבאת החמץ בתא פנוי אקראי באחד הרהיטים
+        const allFurniture = roomContainer.querySelectorAll('.furniture');
+        const randomFurn = allFurniture[Math.floor(Math.random() * allFurniture.length)];
+        const emptyCells = Array.from(randomFurn.querySelectorAll('.grid-cell')).filter(c => c.children.length === 0);
+       
+        const targetCell = emptyCells.length > 0 ? emptyCells[0] : randomFurn.querySelectorAll('.grid-cell')[0];
+        createItem(target.emoji, targetCell, true);
+    }
+
+    function createItem(emoji, parent, isTarget) {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.textContent = emoji;
+       
+        if (isTarget) {
+            item.onclick = (e) => { e.stopPropagation(); win(); };
+            item.style.fontSize = '26px';
+            item.style.opacity = '0.95';
+        } else {
+            item.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
+        }
+
+        parent.appendChild(item);
+    }
+
+    function win() {
+        victoryOverlay.style.display = 'flex';
+        spawnConfetti();
+    }
+
+    function spawnConfetti() {
+        const colors = ['#fbbf24', '#3b82f6', '#ef4444', '#10b981', '#ffffff'];
+        for (let i = 0; i < 120; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.cssText = `
+                width: ${Math.random() * 10 + 5}px;
+                height: ${Math.random() * 10 + 5}px;
+                background-color: ${colors[Math.floor(Math.random() * colors.length)]};
+                left: ${Math.random() * 100}vw;
+                top: -20px;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+            `;
+            document.body.appendChild(c);
+
+            c.animate([
+                { transform: 'translateY(0) rotate(0)', opacity: 1 },
+                { transform: `translateY(110vh) translateX(${(Math.random()-0.5)*300}px) rotate(${Math.random()*1000}deg)`, opacity: 0 }
+            ], {
+                duration: 2000 + Math.random() * 2500,
+                easing: 'cubic-bezier(.25,.1,.25,1)'
+            }).onfinish = () => c.remove();
+        }
+    }
+
+    window.onload = loadLevel;
+</script>
+
+</body>
+</html>
